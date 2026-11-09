@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Te invitaron a JADE</title>
+<meta name="description" content="Abre JADE con tu invitación o descárgala.">
+<style>
+  :root { --fondo:#f4f6f1; --tarjeta:#ffffff; --texto:#15201a; --suave:#566559; --verde:#0b6b44; --verde2:#10a068; --linea:#dce2da; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo:#07130f; --tarjeta:#102019; --texto:#e8efe9; --suave:#a4b4aa; --verde:#58d39b; --verde2:#22c27c; --linea:#234034; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--fondo); color:var(--texto); font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:28px 16px 48px; }
+  h1 { font-size:1.7rem; margin:8px 0 4px; }
+  p { margin:8px 0; }
+  .suave { color:var(--suave); font-size:.95rem; }
+  .tarjeta { background:var(--tarjeta); border:1px solid var(--linea); border-radius:18px; padding:18px; margin:16px 0; }
+  .paso { display:flex; gap:12px; align-items:flex-start; }
+  .num { flex:none; width:28px; height:28px; border-radius:50%; background:var(--verde2); color:#fff; font-weight:700; display:grid; place-items:center; font-size:.95rem; }
+  .boton { display:block; width:100%; text-align:center; text-decoration:none; border:0; cursor:pointer; font:inherit; font-weight:700;
+           padding:15px 16px; border-radius:14px; margin-top:12px; background:var(--verde2); color:#fff; }
+  .boton.claro { background:transparent; color:var(--verde); border:2px solid var(--verde); }
+  .codigo { font:700 1.6rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing:.04em; text-align:center; padding:12px; margin:10px 0 2px;
+            border-radius:12px; border:1px dashed var(--linea); user-select:all; -webkit-user-select:all; }
+  .aviso { font-size:.9rem; color:var(--suave); }
+  .oculto { display:none; }
+  a { color:var(--verde); }
+  details { margin-top:10px; }
+  summary { cursor:pointer; color:var(--verde); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <p class="suave">JADE · finanzas personales y de empresa</p>
+  <h1>Te invitaron a JADE</h1>
+  <p id="intro">Alguien comparte contigo sus datos en JADE. Sigue estos pasos desde tu teléfono Android.</p>
+
+  <div id="sinCodigo" class="tarjeta oculto">
+    <p><strong>Este enlace no trae un código de invitación válido.</strong></p>
+    <p class="suave">Pide a quien te invitó que te lo mande otra vez.</p>
+    <a class="boton claro" href="https://github.com/joanccr/jade-descargas/releases/latest/download/JADE.apk" id="soloDescarga">Descargar JADE de todos modos</a>
+  </div>
+
+  <div id="conCodigo" class="oculto">
+    <div class="tarjeta">
+      <div class="paso"><span class="num">1</span><div>
+        <strong>¿Ya tienes JADE instalada?</strong>
+        <p class="suave">Ábrela con tu invitación.</p>
+        <a class="boton" id="abrir" href="#">Abrir en JADE</a>
+      </div></div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="paso"><span class="num">2</span><div>
+        <strong>¿Todavía no la tienes?</strong>
+        <p class="suave">Descárgala e instálala. Al pulsar, tu código se copia solo: cuando abras JADE por primera vez te propondrá <em>«Entrar con tu invitación»</em>.</p>
+        <button class="boton claro" id="descargar" type="button">Descargar JADE</button>
+        <p class="aviso" id="avisoCopia"></p>
+        <details>
+          <summary>Si Android no te deja instalarla</summary>
+          <p class="aviso">Pulsa «Ajustes» y activa «Autorizar apps de esta fuente»; vuelve y pulsa «Instalar». Si sale Google Play Protect, elige «Más detalles» → «Instalar de todas formas»; si pregunta «¿Activar Play Protect?», pulsa «Rechazar».</p>
+        </details>
+      </div></div>
+    </div>
+
+    <div class="tarjeta">
+      <strong>Tu código de invitación</strong>
+      <div class="codigo" id="codigo"></div>
+      <button class="boton claro" id="copiar" type="button">Copiar código</button>
+      <p class="aviso">Es de un solo uso y caduca a los pocos días. Entrarás con tu propia cuenta de Google.</p>
+    </div>
+  </div>
+
+  <p class="aviso">Esta página no guarda nada: el código viaja solo en la dirección y no se envía a ningún servidor.</p>
+</main>
+
+<script>
+(function () {
+  var APK = "https://github.com/joanccr/jade-descargas/releases/latest/download/JADE.apk";
+  var ESQUEMA = "com.jade.app";
+  var m = (location.hash || "").replace(/^#/, "").trim().toUpperCase().match(/^([0-9A-F]{4})-?([0-9A-F]{4})-?([0-9A-F]{4})$/);
+  var $ = function (id) { return document.getElementById(id); };
+
+  if (!m) { $("sinCodigo").classList.remove("oculto"); return; }
+  var codigo = m[1] + "-" + m[2] + "-" + m[3];
+  $("conCodigo").classList.remove("oculto");
+  $("codigo").textContent = codigo;
+
+  // «Abrir en JADE»: enlace de Android (intent://) que abre la app si está instalada; si no, se queda en esta página.
+  var aqui = location.href.split("#")[0] + "#" + codigo;
+  var intento = "intent://invitacion?c=" + encodeURIComponent(codigo) +
+    "#Intent;scheme=" + ESQUEMA + ";package=" + ESQUEMA + ";S.browser_fallback_url=" + encodeURIComponent(aqui) + ";end";
+  var esAndroid = /android/i.test(navigator.userAgent);
+  $("abrir").setAttribute("href", esAndroid ? intento : ESQUEMA + "://invitacion?c=" + encodeURIComponent(codigo));
+  if (!esAndroid) $("intro").textContent = "Ábrelo desde tu teléfono Android. Desde aquí puedes copiar el código y mandártelo.";
+
+  function copiar(texto) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(texto);
+    return new Promise(function (ok, fallo) {
+      try {
+        var t = document.createElement("textarea"); t.value = texto; t.style.position = "fixed"; t.style.opacity = "0";
+        document.body.appendChild(t); t.select();
+        var bien = document.execCommand("copy"); document.body.removeChild(t); bien ? ok() : fallo();
+      } catch (e) { fallo(e); }
+    });
+  }
+
+  $("copiar").addEventListener("click", function () {
+    copiar(codigo).then(function () { $("copiar").textContent = "Código copiado ✓"; },
+                        function () { $("copiar").textContent = "Mantén pulsado el código para copiarlo"; });
+  });
+
+  $("descargar").addEventListener("click", function () {
+    // El código se copia ANTES de empezar la descarga: así JADE lo encuentra en el primer arranque sin que nadie lo escriba.
+    copiar(codigo).then(function () { $("avisoCopia").textContent = "Código copiado. Instala JADE y ábrela."; },
+                        function () { $("avisoCopia").textContent = "Descargando. Cuando abras JADE, usa «Tengo un código de invitación»."; })
+      .then(function () { location.href = APK; });
+  });
+})();
+</script>
+</body>
+</html>
