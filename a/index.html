@@ -117,7 +117,9 @@
   marcarSinApp();
 
   // Intento automático (algunos navegadores solo abren apps con un toque: por eso también está el botón).
-  if (esAndroid && location.hash !== "#sin-app") {
+  // Solo en Chrome de verdad: los navegadores dentro de otras apps (WebView, «; wv)») no entienden intent:// y enseñarían una página de error.
+  var esChrome = /Chrome\/\d+/.test(ua) && !/; wv\)/.test(ua) && !/(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
+  if (esAndroid && esChrome && location.hash !== "#sin-app") {
     setTimeout(function () { try { location.href = intento; } catch (e) {} }, 400);
   }
 })();
