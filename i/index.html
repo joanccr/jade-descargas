@@ -57,22 +57,32 @@
     <div class="tarjeta">
       <div class="paso"><span class="num">2</span><div>
         <strong>¿Todavía no la tienes?</strong>
-        <p class="suave">Descárgala e instálala. Al pulsar, tu código se copia solo: cuando abras JADE por primera vez te propondrá <em>«Entrar con tu invitación»</em>.</p>
+        <p class="suave">Descárgala e instálala. Al abrir JADE por primera vez, tu invitación ya estará puesta: solo pulsa <em>«Entrar con tu invitación»</em>.</p>
         <button class="boton claro" id="descargar" type="button">Descargar JADE</button>
         <p class="aviso" id="avisoCopia"></p>
+        <details open>
+          <summary>Cómo instalarla, paso a paso</summary>
+          <ol class="aviso">
+            <li>Abre el archivo <b>JADE.apk</b> desde la notificación de descarga o la carpeta Descargas.</li>
+            <li>Si Android dice que no puede instalar apps de esta fuente: pulsa <b>Ajustes</b>, activa <b>«Autorizar apps de esta fuente»</b> (o «Permitir desde esta fuente»), vuelve y pulsa <b>Instalar</b>.</li>
+            <li>Si sale <b>Google Play Protect</b> («Se recomienda analizar la aplicación»): pulsa <b>Analizar app</b>; cuando diga que parece segura, pulsa <b>Instalar</b>. Si en cambio dice que está bloqueada, pulsa <b>Más detalles</b> → <b>Instalar de todos modos</b>.</li>
+            <li>Abre JADE y pulsa <b>«Entrar con tu invitación»</b>; entra con tu cuenta de Google.</li>
+          </ol>
+        </details>
         <details>
-          <summary>Si Android no te deja instalarla</summary>
-          <p class="aviso">Pulsa «Ajustes» y activa «Autorizar apps de esta fuente»; vuelve y pulsa «Instalar». Si sale Google Play Protect, elige «Más detalles» → «Instalar de todas formas»; si pregunta «¿Activar Play Protect?», pulsa «Rechazar».</p>
+          <summary id="resumenAvisos">Si JADE te pide leer los avisos del banco</summary>
+          <p class="aviso" id="textoAvisos"></p>
         </details>
       </div></div>
     </div>
 
-    <div class="tarjeta">
-      <strong>Tu código de invitación</strong>
+    <details class="tarjeta">
+      <summary>¿JADE no detecta tu invitación?</summary>
+      <p class="aviso">Copia este código y, en JADE, pulsa «Tengo un código de invitación».</p>
       <div class="codigo" id="codigo"></div>
       <button class="boton claro" id="copiar" type="button">Copiar código</button>
       <p class="aviso">Es de un solo uso y caduca a los pocos días. Entrarás con tu propia cuenta de Google.</p>
-    </div>
+    </details>
   </div>
 
   <p class="aviso">Esta página no guarda nada: el código viaja solo en la dirección y no se envía a ningún servidor.</p>
@@ -97,6 +107,17 @@
   var esAndroid = /android/i.test(navigator.userAgent);
   $("abrir").setAttribute("href", esAndroid ? intento : ESQUEMA + "://invitacion?c=" + encodeURIComponent(codigo));
   if (!esAndroid) $("intro").textContent = "Ábrelo desde tu teléfono Android. Desde aquí puedes copiar el código y mandártelo.";
+
+  var ua = navigator.userAgent || "";
+  if (/xiaomi|redmi|poco|miui|hyperos/i.test(ua)) {
+    $("resumenAvisos").textContent = "Si JADE te pide leer los avisos del banco (Xiaomi, Redmi, POCO)";
+    $("textoAvisos").textContent = "En JADE, pulsa «Abrir información de la app». En Xiaomi no hay menú de tres puntos: baja hasta el final y pulsa «Permitir ajustes restringidos» (o «Habilitar ajuste restringido»). Después activa JADE en el acceso a notificaciones: saldrá un aviso rojo de «Peligro»; marca la casilla «Soy consciente de los posibles riesgos…» y pulsa «Aceptar».";
+  } else if (/samsung|sm-/i.test(ua)) {
+    $("resumenAvisos").textContent = "Si JADE te pide leer los avisos del banco (Samsung)";
+    $("textoAvisos").textContent = "En JADE, pulsa «Abrir información de la app», toca los tres puntos (arriba a la derecha) y elige «Permitir ajustes restringidos». Si no aparece, intenta primero activar JADE en el acceso a notificaciones y vuelve: ya saldrá. Después activa JADE en el acceso a notificaciones.";
+  } else {
+    $("textoAvisos").textContent = "Android 13 o superior bloquea ese permiso hasta que lo autorizas una vez. En JADE, pulsa «Abrir información de la app», toca los tres puntos (arriba a la derecha) y elige «Permitir ajustes restringidos»; después activa JADE en el acceso a notificaciones. JADE te enseña estos pasos para tu móvil cuando los necesitas.";
+  }
 
   function copiar(texto) {
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(texto);
