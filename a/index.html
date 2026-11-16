@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Abrir JADE</title>
+<meta name="description" content="Abre JADE y actualízala desde dentro de la app, o descárgala si todavía no la tienes.">
+<style>
+  :root { --fondo:#f4f6f1; --tarjeta:#ffffff; --texto:#15201a; --suave:#566559; --verde:#0b6b44; --verde2:#10a068; --linea:#dce2da; --oro:#b8860b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo:#07130f; --tarjeta:#102019; --texto:#e8efe9; --suave:#a4b4aa; --verde:#58d39b; --verde2:#22c27c; --linea:#234034; --oro:#e6c35c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--fondo); color:var(--texto); font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:28px 16px 48px; }
+  h1 { font-size:1.7rem; margin:8px 0 4px; }
+  p { margin:8px 0; }
+  .marca { display:flex; align-items:center; gap:10px; color:var(--oro); font-weight:800; letter-spacing:.18em; }
+  .marca span { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:var(--verde2); color:#fff; letter-spacing:0; font-size:1.2rem; }
+  .suave { color:var(--suave); font-size:.95rem; }
+  .tarjeta { background:var(--tarjeta); border:1px solid var(--linea); border-radius:18px; padding:18px; margin:16px 0; }
+  .tarjeta.resalta { border-color:var(--verde2); box-shadow:0 0 0 3px color-mix(in srgb, var(--verde2) 25%, transparent); }
+  .paso { display:flex; gap:12px; align-items:flex-start; }
+  .paso > div:last-child { flex:1; min-width:0; }
+  .num { flex:none; width:28px; height:28px; border-radius:50%; background:var(--verde2); color:#fff; font-weight:700; display:grid; place-items:center; font-size:.95rem; }
+  .boton { display:block; width:100%; text-align:center; text-decoration:none; border:0; cursor:pointer; font:inherit; font-weight:700;
+           padding:15px 16px; border-radius:14px; margin-top:12px; background:var(--verde2); color:#fff; }
+  .boton.claro { background:transparent; color:var(--verde); border:2px solid var(--verde); }
+  .aviso { font-size:.9rem; color:var(--suave); }
+  a { color:var(--verde); }
+  details { margin-top:10px; }
+  summary { cursor:pointer; color:var(--verde); font-weight:600; }
+  ol { padding-left:20px; margin:8px 0; }
+  li { margin:6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="marca"><span>J</span>JADE</div>
+  <h1>Abre JADE</h1>
+  <p id="intro" class="suave">Si ya tienes JADE, se abre y se actualiza por dentro. Si no, aquí la descargas.</p>
+
+  <div class="tarjeta" id="tarjetaAbrir">
+    <div class="paso"><span class="num">1</span><div>
+      <strong>¿Ya tienes JADE instalada?</strong>
+      <p class="suave">Ábrela desde aquí: buscará la versión nueva y se actualizará dentro de la propia app. No tienes que descargar ningún archivo. Tus datos no se tocan.</p>
+      <a class="boton" id="abrir" href="#">Abrir en JADE</a>
+    </div></div>
+  </div>
+
+  <div class="tarjeta" id="tarjetaDescargar">
+    <div class="paso"><span class="num">2</span><div>
+      <strong>¿Todavía no la tienes?</strong>
+      <p class="suave">Descárgala e instálala. Solo se hace la primera vez; después JADE se actualiza sola desde dentro.</p>
+      <a class="boton claro" id="descargar" href="https://github.com/joanccr/jade-descargas/releases/latest/download/JADE.apk">Descargar JADE</a>
+      <details>
+        <summary>Cómo instalarla</summary>
+        <ol class="aviso">
+          <li>Abre el archivo <b>JADE.apk</b> desde la notificación de descarga o la carpeta Descargas.</li>
+          <li>Si Android dice que no puede instalar apps desconocidas de esta fuente: pulsa <b>Ajustes</b>, activa <b>«Autorizar apps de esta fuente»</b> (en algunos móviles dice «Permitir desde esta fuente»), vuelve y pulsa <b>Instalar</b>. Solo se pide la primera vez.</li>
+          <li>Si sale <b>Google Play Protect</b> diciendo que la app no es reconocida o está bloqueada: pulsa <b>Más detalles</b> y luego <b>Instalar de todos modos</b> (si te ofrece «Analizar app», también vale). Si pregunta «¿Activar Play Protect?», pulsa <b>Rechazar</b>.</li>
+          <li>Abre JADE y entra con tu cuenta de Google.</li>
+        </ol>
+      </details>
+      <details id="detalleAvisos">
+        <summary id="resumenAvisos">Si JADE te pide leer los avisos del banco</summary>
+        <p class="aviso" id="textoAvisos"></p>
+      </details>
+    </div></div>
+  </div>
+
+  <p class="aviso">Esta página no guarda nada ni te pide ningún dato.</p>
+</main>
+
+<script>
+(function () {
+  var ESQUEMA = "com.jade.app";
+  var $ = function (id) { return document.getElementById(id); };
+  var ua = navigator.userAgent || "";
+  var esAndroid = /android/i.test(ua);
+
+  // «Abrir en JADE»: enlace de Android (intent://) que abre la app si está instalada (llega a `com.jade.app://actualizar`); si no, vuelve a esta
+  // misma página con #sin-app para marcar el paso de descargar.
+  var base = location.href.split("#")[0];
+  var intento = "intent://actualizar#Intent;scheme=" + ESQUEMA + ";package=" + ESQUEMA +
+    ";S.browser_fallback_url=" + encodeURIComponent(base + "#sin-app") + ";end";
+  $("abrir").setAttribute("href", esAndroid ? intento : ESQUEMA + "://actualizar");
+  if (!esAndroid) $("intro").textContent = "JADE es para Android: ábrelo desde tu teléfono Android.";
+
+  // Avisos del banco: los pasos cambian según la marca del móvil (Android 13+ bloquea ese permiso en apps que no vienen de una tienda).
+  var pasos;
+  if (/xiaomi|redmi|poco|miui|hyperos/i.test(ua)) {
+    $("resumenAvisos").textContent = "Si JADE te pide leer los avisos del banco (Xiaomi, Redmi, POCO)";
+    pasos = "En JADE, pulsa «Abrir información de la app». En Xiaomi no hay menú de tres puntos: baja hasta el final y pulsa «Permitir ajustes restringidos» " +
+            "(o «Habilitar ajuste restringido»); al activarlo, la opción desaparece. Después activa JADE en el acceso a notificaciones: saldrá un aviso rojo de «Peligro»; " +
+            "marca la casilla «Soy consciente de los posibles riesgos…» y pulsa «Aceptar».";
+  } else if (/samsung|sm-/i.test(ua)) {
+    $("resumenAvisos").textContent = "Si JADE te pide leer los avisos del banco (Samsung)";
+    pasos = "En JADE, pulsa «Abrir información de la app», toca los tres puntos (arriba a la derecha) y elige «Permitir ajustes restringidos». " +
+            "Si la opción no aparece, intenta primero activar JADE en el acceso a notificaciones (Android dirá que está bloqueado) y vuelve a la información de la app: ya saldrá. " +
+            "Después activa JADE en el acceso a notificaciones.";
+  } else {
+    pasos = "Android 13 o superior bloquea ese permiso hasta que lo autorizas una vez. En JADE, pulsa «Abrir información de la app», toca los tres puntos (arriba a la derecha) " +
+            "y elige «Permitir ajustes restringidos»; después activa JADE en el acceso a notificaciones. En algunas marcas la opción está abajo del todo de esa pantalla. " +
+            "JADE te enseña estos pasos para tu móvil cuando los necesitas.";
+  }
+  $("textoAvisos").textContent = pasos;
+
+  function marcarSinApp() {
+    if (location.hash !== "#sin-app") return;
+    $("tarjetaDescargar").classList.add("resalta");
+    $("intro").textContent = "No parece que tengas JADE instalada: descárgala aquí.";
+    $("tarjetaDescargar").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  window.addEventListener("hashchange", marcarSinApp);
+  marcarSinApp();
+
+  // Intento automático (algunos navegadores solo abren apps con un toque: por eso también está el botón).
+  if (esAndroid && location.hash !== "#sin-app") {
+    setTimeout(function () { try { location.href = intento; } catch (e) {} }, 400);
+  }
+})();
+</script>
+</body>
+</html>
