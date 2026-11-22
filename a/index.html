@@ -54,6 +54,7 @@
       <strong>¿Todavía no la tienes?</strong>
       <p class="suave">Descárgala e instálala. Solo se hace la primera vez; después JADE se actualiza sola desde dentro.</p>
       <a class="boton claro" id="descargar" href="https://github.com/joanccr/jade-descargas/releases/latest/download/JADE.apk">Descargar JADE</a>
+      <p class="aviso" id="versionVivo"></p>
       <details>
         <summary>Cómo instalarla</summary>
         <ol class="aviso">
@@ -87,6 +88,26 @@
     ";S.browser_fallback_url=" + encodeURIComponent(base + "#sin-app") + ";end";
   $("abrir").setAttribute("href", esAndroid ? intento : ESQUEMA + "://actualizar");
   if (!esAndroid) $("intro").textContent = "JADE es para Android: ábrelo desde tu teléfono Android.";
+
+  // Siempre la versión más reciente (22 nov 2026, Joan: «el enlace da una versión antigua»): se pregunta a GitHub cuál es la última publicada y el botón
+  // apunta a ese archivo exacto (con su número de versión en la dirección, así ningún navegador ni caché reutiliza una descarga anterior). Si no hay conexión
+  // con GitHub, queda el enlace «latest», que también apunta siempre a la última.
+  try {
+    fetch("https://api.github.com/repos/joanccr/jade-descargas/releases/latest", { cache: "no-store", headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.assets) return;
+        var apk = null;
+        for (var i = 0; i < j.assets.length; i++) { if (/\.apk$/i.test(j.assets[i].name)) { apk = j.assets[i]; break; } }
+        if (!apk) return;
+        var version = String(j.tag_name || j.name || "").replace(/^v/i, "");
+        $("descargar").setAttribute("href", apk.browser_download_url);
+        if (version) $("descargar").textContent = "Descargar JADE " + version;
+        var fecha = j.published_at ? new Date(j.published_at).toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" }) : "";
+        $("versionVivo").textContent = "Última versión publicada: " + version + (fecha ? " · " + fecha : "") + ".";
+      })
+      .catch(function () {});
+  } catch (e) {}
 
   // Avisos del banco: los pasos cambian según la marca del móvil (Android 13+ bloquea ese permiso en apps que no vienen de una tienda).
   var pasos;
